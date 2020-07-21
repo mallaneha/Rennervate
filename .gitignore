@@ -1,8 +1,12 @@
 # virtual environment
 .venv/
 
+.idea/
+
 .vscode/
 
 videos/
 
 shape_predictor_68_face_landmarks.dat
+
+.pylintrc

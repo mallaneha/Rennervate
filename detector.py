@@ -1,22 +1,31 @@
+
+from typing import OrderedDict
 import cv2
-import numpy as np
-import matplotlib.pyplot as plt
 import dlib
 
-#
 cap = cv2.VideoCapture(0)
 
 if cap.isOpened():
-    check, frame = cap.read()
+    CHECK, frame = cap.read()
 else:
-    check = False
+    CHECK = False
 
 p = "shape_predictor_68_face_landmarks.dat"
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(p)
 
-while check:
-    check, frame = cap.read()
+FACIAL_LANDMARKS_INDEX = OrderedDict([
+    ("jaw", (0, 17)),
+    ("right_eyebrow", (17, 22)),
+    ("left_eyebrow", (22, 27)),
+    ("nose", (27, 36)),
+    ("right_eye", (36, 42)),
+    ("left_eye", (42, 48)),
+    ("mouth", (48, 64))
+])
+
+while CHECK:
+    CHECK, frame = cap.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     faces = detector(gray)
