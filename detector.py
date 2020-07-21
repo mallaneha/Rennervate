@@ -10,9 +10,9 @@ if cap.isOpened():
 else:
     CHECK = False
 
-p = "shape_predictor_68_face_landmarks.dat"
+P = "shape_predictor_68_face_landmarks.dat"
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor(p)
+predictor = dlib.shape_predictor(P)
 
 FACIAL_LANDMARKS_INDEX = OrderedDict([
     ("jaw", (0, 17)),
@@ -30,14 +30,21 @@ while CHECK:
 
     faces = detector(gray)
 
-    for face in faces:
+    for (i, face) in enumerate(faces):
         x1 = face.left()
         x2 = face.right()
         y1 = face.top()
         y2 = face.bottom()
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
+
+        # draw the face bounding box
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        
+        # show the face number
+        cv2.putText(frame, "Face #{}".format(i + 1), (x1-10, y1-10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         landmarks = predictor(gray, face)
 
+        # draw the facial landmamrks
         for n in range(36, 68):
             x = landmarks.part(n).x
             y = landmarks.part(n).y
