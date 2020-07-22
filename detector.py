@@ -3,6 +3,7 @@ from typing import OrderedDict
 import cv2
 import dlib
 
+# using 0 for external camera input
 cap = cv2.VideoCapture(0)
 
 if cap.isOpened():
@@ -38,7 +39,7 @@ while CHECK:
 
         # draw the face bounding box
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        
+
         # show the face number
         cv2.putText(frame, "Face #{}".format(i + 1), (x1-10, y1-10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)

@@ -1,15 +1,15 @@
-import cv2
-import time
 
-# creating an opject, zero for external camera
+import cv2
+
+# creating an object, zero for external camera
 cap = cv2.VideoCapture(0)
 
-a = 0
+A = 0
 
 if cap.isOpened():
-    check, frame = cap.read()
+    CHECK, frame = cap.read()
 else:
-    check = False
+    CHECK = False
 
 # # for photo capture
 # img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -19,12 +19,12 @@ else:
 cv2.namedWindow("Capturing")
 
 # for video capture
-while check:
-    a = a + 1
+while CHECK:
+    A = A + 1
 
     # creating a frame object
-    check, frame = cap.read()
-    print(check)
+    CHECK, frame = cap.read()
+    print(CHECK)
     print(frame)
 
     # converting to grayscale
@@ -40,7 +40,7 @@ while check:
     if key == ord('q'):
         break
 
-print(a)
+print(A)
 
 cv2.destroyAllWindows()
 
