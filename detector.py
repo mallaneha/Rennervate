@@ -6,18 +6,18 @@ import dlib
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-p", "--shape_predictor", required=True,
-                help="path to facial landmark predictor")
+# ap.add_argument("-p", "--shape_predictor", required=True,
+                # help="path to facial landmark predictor")
 ap.add_argument("-a", "--alarm", type=str, default="",
                 help="path alarm .WAV file")
 ap.add_argument("-w", "--webcam", type=int, default=0,
                 help="index of webcam on systesm")
 args = vars(ap.parse_args())
 
-# P = "shape_predictor_68_face_landmarks.dat"
+P = "shape_predictor_68_face_landmarks.dat"
 print("Loading facial landmark predictor...")
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor(args["shape_predictor"])
+predictor = dlib.shape_predictor(P)
 
 # For dlib's 68-point facial detector:
 FACIAL_LANDMARKS_INDEX = OrderedDict([
