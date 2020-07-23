@@ -118,7 +118,7 @@ def main():
             logger("Face detection: "+str(after_face - before_face))
             if len(faces) > 0:
                 logger("Landmark detection: "+str(after_landmarks - before_landmarks))
-            # time_stamp = False
+            time_stamp = False
 
         key = cv2.waitKey(1)
 
