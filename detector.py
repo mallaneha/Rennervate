@@ -8,8 +8,10 @@ import dlib
 
 start_time = time.time()
 start = datetime.datetime.now()
+
 P = "shape_predictor_68_face_landmarks.dat"
 print("Loading facial landmark predictor...")
+
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(P)
 after_model_load = datetime.datetime.now()
@@ -25,6 +27,7 @@ FACIAL_LANDMARKS = OrderedDict([
     ("mouth", list(range(48, 68)))
 ])
 
+
 # for calculating the midpoint between two points
 def midpoint(p1, p2):
     return int((p1.x + p2.x)/2), int((p1.y + p2.y)/2)
@@ -36,15 +39,21 @@ def euclidean_distance(leftx, lefty, rightx, righty):
 
 
 # for calculating the eye aspect ratio
-def get_EAR(eye_point, facial_landmark):
-    left_point = [facial_landmark.part(eye_point[0]).x, facial_landmark.part(eye_point[0]).y]
-    right_point = [facial_landmark.part(eye_point[3]).x, facial_landmark.part(eye_point[3]).y]
+def eye_aspect_ratio(eye_point, facial_landmark):
+    left_point = [facial_landmark.part(
+        eye_point[0]).x, facial_landmark.part(eye_point[0]).y]
+    right_point = [facial_landmark.part(
+        eye_point[3]).x, facial_landmark.part(eye_point[3]).y]
 
-    top_point = midpoint(facial_landmark.part(eye_point[1]), facial_landmark.part(eye_point[2]))
-    bottom_point = midpoint(facial_landmark.part(eye_point[4]), facial_landmark.part(eye_point[5]))
+    top_point = midpoint(facial_landmark.part(
+        eye_point[1]), facial_landmark.part(eye_point[2]))
+    bottom_point = midpoint(facial_landmark.part(
+        eye_point[4]), facial_landmark.part(eye_point[5]))
 
-    horizontal_dist = euclidean_distance(left_point[0], left_point[1], right_point[0], right_point[1])
-    vertical_dist = euclidean_distance(top_point[0], top_point[1], bottom_point[0], bottom_point[1])
+    horizontal_dist = euclidean_distance(
+        left_point[0], left_point[1], right_point[0], right_point[1])
+    vertical_dist = euclidean_distance(
+        top_point[0], top_point[1], bottom_point[0], bottom_point[1])
 
     EAR = vertical_dist / horizontal_dist
     return EAR
@@ -56,6 +65,11 @@ def logger(message):
 
 
 def main():
+    EAR_THRESH = 0.25
+    EAR_CONSECUTIVE_FRAMES = 48
+
+    COUNTER = 0
+    ALARM_ON = False
     # using 0 for external camera input
     cap = cv2.VideoCapture(0)
 
@@ -102,14 +116,31 @@ def main():
                 y = landmarks.part(n).y
                 cv2.circle(frame, (x, y), 3, (0, 0, 255), -1)
 
-            left_EAR = get_EAR(FACIAL_LANDMARKS['left_eye'], landmarks)
-            right_EAR = get_EAR(FACIAL_LANDMARKS['right_eye'], landmarks)
+            left_EAR = eye_aspect_ratio(
+                FACIAL_LANDMARKS['left_eye'], landmarks)
+            right_EAR = eye_aspect_ratio(
+                FACIAL_LANDMARKS['right_eye'], landmarks)
 
             ear_both_eyes = (left_EAR + right_EAR) / 2
 
+            if ear_both_eyes < EAR_THRESH:
+                COUNTER += 1
+
+                if COUNTER >= EAR_CONSECUTIVE_FRAMES:
+                    if not ALARM_ON:
+                        ALARM_ON = True
+
+                    cv2.putText(frame, "Drowsiness Alert!", (10, 30),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                    print("Drowsiness detected!")
+            else:
+                COUNTER = 0
+                ALARM_ON = False
+
+            cv2.putText(frame, "EAR: {:.2f}".format(
+                ear_both_eyes), (300, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
         cv2.namedWindow("Capturing")
-
         cv2.imshow("Capturing", frame)
 
         if time_stamp:
@@ -117,7 +148,8 @@ def main():
             logger("Model load: "+str(after_model_load - start))
             logger("Face detection: "+str(after_face - before_face))
             if len(faces) > 0:
-                logger("Landmark detection: "+str(after_landmarks - before_landmarks))
+                logger("Landmark detection: " +
+                       str(after_landmarks - before_landmarks))
             time_stamp = False
 
         key = cv2.waitKey(1)
