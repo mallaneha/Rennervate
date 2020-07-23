@@ -4,13 +4,6 @@ import argparse
 import cv2
 import dlib
 
-# using 0 for external camera input
-cap = cv2.VideoCapture(0)
-
-if cap.isOpened():
-    CHECK, frame = cap.read()
-else:
-    CHECK = False
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--shape_predictor", required=True,
@@ -26,6 +19,7 @@ print("Loading facial landmark predictor...")
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(args["shape_predictor"])
 
+# For dlib's 68-point facial detector:
 FACIAL_LANDMARKS_INDEX = OrderedDict([
     ("jaw", (0, 17)),
     ("right_eyebrow", (17, 22)),
@@ -33,43 +27,58 @@ FACIAL_LANDMARKS_INDEX = OrderedDict([
     ("nose", (27, 36)),
     ("right_eye", (36, 42)),
     ("left_eye", (42, 48)),
-    ("mouth", (48, 64))
+    ("mouth", (48, 68))
 ])
 
-while CHECK:
-    CHECK, frame = cap.read()
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    faces = detector(gray)
+def main():
+    # using 0 for external camera input
+    cap = cv2.VideoCapture(args["webcam"])
 
-    for (i, face) in enumerate(faces):
-        x1 = face.left()
-        x2 = face.right()
-        y1 = face.top()
-        y2 = face.bottom()
+    if cap.isOpened():
+        CHECK, frame = cap.read()
+    else:
+        CHECK = False
 
-        # draw the face bounding box
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    while CHECK:
+        CHECK, frame = cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # show the face number
-        cv2.putText(frame, "Face #{}".format(i + 1), (x1-10, y1-10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        landmarks = predictor(gray, face)
+        faces = detector(gray)
 
-        # draw the facial landmamrks
-        for n in range(36, 68):
-            x = landmarks.part(n).x
-            y = landmarks.part(n).y
-            cv2.circle(frame, (x, y), 3, (0, 0, 255), -1)
+        for (i, face) in enumerate(faces):
+            x1 = face.left()
+            x2 = face.right()
+            y1 = face.top()
+            y2 = face.bottom()
 
-    cv2.namedWindow("Capturing")
+            # draw the face bounding box
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-    cv2.imshow("Capturing", frame)
+            # show the face number
+            cv2.putText(frame, "Face #{}".format(i + 1), (x1-10, y1-10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            landmarks = predictor(gray, face)
 
-    key = cv2.waitKey(1)
+            # draw the facial landmamrks
+            for n in range(36, 68):
+                x = landmarks.part(n).x
+                y = landmarks.part(n).y
+                cv2.circle(frame, (x, y), 3, (0, 0, 255), -1)
 
-    if key == ord('q'):
-        break
+        cv2.namedWindow("Capturing")
 
-cv2.destroyAllWindows()
-cap.release()
+        cv2.imshow("Capturing", frame)
+
+        key = cv2.waitKey(1)
+
+        if key == ord('q'):
+            print("Ending the capture")
+            break
+
+    cv2.destroyAllWindows()
+    cap.release()
+
+
+if __name__ == '__main__':
+    main()
