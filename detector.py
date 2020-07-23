@@ -1,50 +1,77 @@
 
 from typing import OrderedDict
-import argparse
+import time
+import datetime
+import numpy as np
 import cv2
 import dlib
 
-
-ap = argparse.ArgumentParser()
-# ap.add_argument("-p", "--shape_predictor", required=True,
-                # help="path to facial landmark predictor")
-ap.add_argument("-a", "--alarm", type=str, default="",
-                help="path alarm .WAV file")
-ap.add_argument("-w", "--webcam", type=int, default=0,
-                help="index of webcam on systesm")
-args = vars(ap.parse_args())
-
+start_time = time.time()
+start = datetime.datetime.now()
 P = "shape_predictor_68_face_landmarks.dat"
 print("Loading facial landmark predictor...")
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(P)
+after_model_load = datetime.datetime.now()
 
 # For dlib's 68-point facial detector:
-FACIAL_LANDMARKS_INDEX = OrderedDict([
-    ("jaw", (0, 17)),
-    ("right_eyebrow", (17, 22)),
-    ("left_eyebrow", (22, 27)),
-    ("nose", (27, 36)),
-    ("right_eye", (36, 42)),
-    ("left_eye", (42, 48)),
-    ("mouth", (48, 68))
+FACIAL_LANDMARKS = OrderedDict([
+    ("jaw", list(range(0, 17))),
+    ("right_eyebrow", list(range(17, 22))),
+    ("left_eyebrow", list(range(22, 27))),
+    ("nose", list(range(27, 36))),
+    ("right_eye", list(range(36, 42))),
+    ("left_eye", list(range(42, 48))),
+    ("mouth", list(range(48, 68)))
 ])
+
+# for calculating the midpoint between two points
+def midpoint(p1, p2):
+    return int((p1.x + p2.x)/2), int((p1.y + p2.y)/2)
+
+
+# for calculating the distance between two points
+def euclidean_distance(leftx, lefty, rightx, righty):
+    return np.sqrt((leftx - rightx)**2 + (lefty - righty)**2)
+
+
+# for calculating the eye aspect ratio
+def get_EAR(eye_point, facial_landmark):
+    left_point = [facial_landmark.part(eye_point[0]).x, facial_landmark.part(eye_point[0]).y]
+    right_point = [facial_landmark.part(eye_point[3]).x, facial_landmark.part(eye_point[3]).y]
+
+    top_point = midpoint(facial_landmark.part(eye_point[1]), facial_landmark.part(eye_point[2]))
+    bottom_point = midpoint(facial_landmark.part(eye_point[4]), facial_landmark.part(eye_point[5]))
+
+    horizontal_dist = euclidean_distance(left_point[0], left_point[1], right_point[0], right_point[1])
+    vertical_dist = euclidean_distance(top_point[0], top_point[1], bottom_point[0], bottom_point[1])
+
+    EAR = vertical_dist / horizontal_dist
+    return EAR
+
+
+def logger(message):
+    if __debug__:
+        print(message)
 
 
 def main():
     # using 0 for external camera input
-    cap = cv2.VideoCapture(args["webcam"])
+    cap = cv2.VideoCapture(0)
 
     if cap.isOpened():
         CHECK, frame = cap.read()
     else:
         CHECK = False
 
+    time_stamp = True
     while CHECK:
         CHECK, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+        before_face = datetime.datetime.now()
         faces = detector(gray)
+        after_face = datetime.datetime.now()
 
         for (i, face) in enumerate(faces):
             x1 = face.left()
@@ -58,20 +85,44 @@ def main():
             # show the face number
             cv2.putText(frame, "Face #{}".format(i + 1), (x1-10, y1-10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            landmarks = predictor(gray, face)
 
-            # draw the facial landmamrks
-            for n in range(36, 68):
+            before_landmarks = datetime.datetime.now()
+            landmarks = predictor(gray, face)
+            after_landmarks = datetime.datetime.now()
+
+            # calculating the facial landmamrks
+            landmark_keys = ['right_eye', 'left_eye', 'mouth']
+            required_landmarks = []
+            for key in landmark_keys:
+                required_landmarks.extend(FACIAL_LANDMARKS.get(key))
+
+            # drawing the facial landmarks in the video
+            for n in required_landmarks:
                 x = landmarks.part(n).x
                 y = landmarks.part(n).y
                 cv2.circle(frame, (x, y), 3, (0, 0, 255), -1)
+
+            left_EAR = get_EAR(FACIAL_LANDMARKS['left_eye'], landmarks)
+            right_EAR = get_EAR(FACIAL_LANDMARKS['right_eye'], landmarks)
+
+            ear_both_eyes = (left_EAR + right_EAR) / 2
+
 
         cv2.namedWindow("Capturing")
 
         cv2.imshow("Capturing", frame)
 
+        if time_stamp:
+            logger("---{} seconds---".format(round((time.time() - start_time), 2)))
+            logger("Model load: "+str(after_model_load - start))
+            logger("Face detection: "+str(after_face - before_face))
+            if len(faces) > 0:
+                logger("Landmark detection: "+str(after_landmarks - before_landmarks))
+            # time_stamp = False
+
         key = cv2.waitKey(1)
 
+        # Use q to close the detection
         if key == ord('q'):
             print("Ending the capture")
             break
