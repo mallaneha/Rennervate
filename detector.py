@@ -2,6 +2,7 @@
 from typing import OrderedDict
 import time
 import datetime
+from playsound import playsound
 import numpy as np
 import cv2
 import dlib
@@ -59,6 +60,10 @@ def eye_aspect_ratio(eye_point, facial_landmark):
     return EAR
 
 
+def alarm():
+    playsound('audio/alarm_sound.wav')
+
+
 def logger(message):
     if __debug__:
         print(message)
@@ -66,7 +71,7 @@ def logger(message):
 
 def main():
     EAR_THRESH = 0.25
-    EAR_CONSECUTIVE_FRAMES = 48
+    EAR_CONSECUTIVE_FRAMES = 42
 
     COUNTER = 0
     ALARM_ON = False
@@ -129,6 +134,7 @@ def main():
                 if COUNTER >= EAR_CONSECUTIVE_FRAMES:
                     if not ALARM_ON:
                         ALARM_ON = True
+                        alarm()
 
                     cv2.putText(frame, "Drowsiness Alert!", (10, 30),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -157,6 +163,7 @@ def main():
         # Use q to close the detection
         if key == ord('q'):
             print("Ending the capture")
+            
             break
 
     cv2.destroyAllWindows()
