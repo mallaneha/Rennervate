@@ -61,13 +61,13 @@ def eye_aspect_ratio(eye_point, facial_landmark):
     EAR = vertical_dist / horizontal_dist
     return EAR
 
-
+# used to play the alarm sound on loop
 def raise_alarm():
     alert_sound = AudioSegment.from_wav("audio/beep-06.wav")
     while ALARM_ON:
         play(alert_sound)
 
-
+# used to log messages
 def logger(message):
     if __debug__:
         print(message)
@@ -140,6 +140,8 @@ def main():
                 if COUNTER >= EAR_CONSECUTIVE_FRAMES:
                     if not ALARM_ON:
                         ALARM_ON = True
+
+                        # creating new thread to play the alarm in background
                         audio_thread = threading.Thread(target=raise_alarm)
                         audio_thread.start()
 
