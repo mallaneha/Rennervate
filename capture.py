@@ -1,5 +1,6 @@
 
 import os
+import bz2
 import requests
 from tqdm import tqdm
 import cv2
@@ -23,6 +24,12 @@ if not os.path.exists(local_filename):
     with tqdm.wrapattr(open(local_filename, 'wb'), 'write', miniters=1, desc='Downloading', total=int(length)) as fout:
         for chunk in response.iter_content(chunk_size=4096):
             fout.write(chunk)
+
+dat_file_name = local_filename[:-4]
+with open(dat_file_name, 'wb') as uncompressed_file, open(local_filename, 'rb') as file:
+    bz2_decompressor = bz2.BZ2Decompressor()
+    for data in iter(lambda: file.read(100 * 1024), b''):
+        uncompressed_file.write(bz2_decompressor.decompress(data))
 
 # # for photo capture
 # img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
