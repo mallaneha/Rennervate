@@ -1,4 +1,8 @@
 
+import os
+import bz2
+import requests
+from tqdm import tqdm
 from typing import OrderedDict
 import time
 import datetime
@@ -10,8 +14,30 @@ import cv2
 import dlib
 
 start_time = time.time()
-start = datetime.datetime.now()
 
+
+def download_detector():
+    url = 'https://github.com/davisking/dlib-models/raw/master/shape_predictor_68_face_landmarks.dat.bz2'
+    local_filename = url.split('/')[-1]
+
+    if not os.path.exists(local_filename):
+        response = requests.get(url, stream=True)
+        length = response.headers.get('content-length', 0)
+        print('Downloading the shape predictor file:')
+        with tqdm.wrapattr(open(local_filename, 'wb'), 'write', miniters=1, desc='Downloading bz2 file ', total=int(length)) as fout:
+            for chunk in response.iter_content(chunk_size=4096):
+                fout.write(chunk)
+
+    dat_file = local_filename[:-4]
+    if not os.path.exists(dat_file):
+        print('Extracting from the bz2 file:')
+        with tqdm.wrapattr(open(dat_file, 'wb'), 'write', miniters=1, desc='Extracting dat file ') as uncompressed_file, open(local_filename, 'rb') as file:
+            bz2_decompressor = bz2.BZ2Decompressor()
+            for data in iter(lambda: file.read(100 * 1024), b''):
+                uncompressed_file.write(bz2_decompressor.decompress(data))
+
+
+start = datetime.datetime.now()
 P = "shape_predictor_68_face_landmarks.dat"
 print("Loading facial landmark predictor...")
 
@@ -62,12 +88,16 @@ def eye_aspect_ratio(eye_point, facial_landmark):
     return EAR
 
 # used to play the alarm sound on loop
+
+
 def raise_alarm():
     alert_sound = AudioSegment.from_wav("audio/beep-06.wav")
     while ALARM_ON:
         play(alert_sound)
 
 # used to log messages
+
+
 def logger(message):
     if __debug__:
         print(message)
