@@ -64,4 +64,4 @@ You should try installing each requirements separately if you are getting errors
 $ code .
 ```
 
-Go to the following [link](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2) and extract the shape_predictor_68_landmark.dat file to the project folder.
+If you need to download the shape predictor file, to get it from dlib go to the following [link](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2) and extract the shape_predictor_68_landmark.dat file to the project folder. Or you can download it directly [here](https://github.com/JeffTrain/selfie/raw/master/shape_predictor_68_face_landmarks.dat).
