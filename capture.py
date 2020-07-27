@@ -21,15 +21,17 @@ local_filename = url.split('/')[-1]
 if not os.path.exists(local_filename):
     response = requests.get(url, stream=True)
     length = response.headers.get('content-length', 0)
-    with tqdm.wrapattr(open(local_filename, 'wb'), 'write', miniters=1, desc='Downloading', total=int(length)) as fout:
+    print(length)
+    with tqdm.wrapattr(open(local_filename, 'wb'), 'write', miniters=1, desc='Downloading ', total=int(length)) as fout:
         for chunk in response.iter_content(chunk_size=4096):
             fout.write(chunk)
 
-dat_file_name = local_filename[:-4]
-with open(dat_file_name, 'wb') as uncompressed_file, open(local_filename, 'rb') as file:
-    bz2_decompressor = bz2.BZ2Decompressor()
-    for data in iter(lambda: file.read(100 * 1024), b''):
-        uncompressed_file.write(bz2_decompressor.decompress(data))
+dat_file = local_filename[:-4]
+if not os.path.exists(dat_file):
+    with tqdm.wrapattr(open(dat_file, 'wb'), 'write', miniters=1, desc='Extracting ') as uncompressed_file, open(local_filename, 'rb') as file:
+        bz2_decompressor = bz2.BZ2Decompressor()
+        for data in iter(lambda: file.read(100 * 1024), b''):
+            uncompressed_file.write(bz2_decompressor.decompress(data))
 
 # # for photo capture
 # img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -44,8 +46,8 @@ while CHECK:
 
     # creating a frame object
     CHECK, frame = cap.read()
-    print(CHECK)
-    print(frame)
+    # print(CHECK)
+    # print(frame)
 
     # converting to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -60,7 +62,7 @@ while CHECK:
     if key == ord('q'):
         break
 
-print(A)
+# print(A)
 
 cv2.destroyAllWindows()
 

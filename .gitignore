@@ -9,5 +9,4 @@ videos/
 
 shape_predictor_68_face_landmarks.dat
 
-
-.pylintrc
+shape_predictor_68_face_landmarks.dat.bz2
