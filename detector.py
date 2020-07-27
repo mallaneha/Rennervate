@@ -1,14 +1,13 @@
-
+# importing the required libraries
 import os
-import bz2
-import requests
-from tqdm import tqdm
 from typing import OrderedDict
 import time
 import datetime
 import threading
 from pydub import AudioSegment
 from pydub.playback import play
+import requests
+from tqdm import tqdm
 import numpy as np
 import cv2
 import dlib
@@ -16,45 +15,20 @@ import dlib
 start_time = time.time()
 
 
+# downloading the required dlib 68 landmarks predictor
 def download_detector():
-    url = 'https://github.com/davisking/dlib-models/raw/master/shape_predictor_68_face_landmarks.dat.bz2'
+    url = 'https://github.com/JeffTrain/selfie/raw/master/shape_predictor_68_face_landmarks.dat'
     local_filename = url.split('/')[-1]
 
     if not os.path.exists(local_filename):
         response = requests.get(url, stream=True)
         length = response.headers.get('content-length', 0)
         print('Downloading the shape predictor file:')
-        with tqdm.wrapattr(open(local_filename, 'wb'), 'write', miniters=1, desc='Downloading bz2 file ', total=int(length)) as fout:
+        with tqdm.wrapattr(open(local_filename, 'wb'), 'write', miniters=1, desc='Downloading file ', total=int(length)) as fout:
             for chunk in response.iter_content(chunk_size=4096):
                 fout.write(chunk)
-
-    dat_file = local_filename[:-4]
-    if not os.path.exists(dat_file):
-        print('Extracting from the bz2 file:')
-        with tqdm.wrapattr(open(dat_file, 'wb'), 'write', miniters=1, desc='Extracting dat file ') as uncompressed_file, open(local_filename, 'rb') as file:
-            bz2_decompressor = bz2.BZ2Decompressor()
-            for data in iter(lambda: file.read(100 * 1024), b''):
-                uncompressed_file.write(bz2_decompressor.decompress(data))
-
-
-start = datetime.datetime.now()
-P = "shape_predictor_68_face_landmarks.dat"
-print("Loading facial landmark predictor...")
-
-detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor(P)
-after_model_load = datetime.datetime.now()
-
-# For dlib's 68-point facial detector:
-FACIAL_LANDMARKS = OrderedDict([
-    ("jaw", list(range(0, 17))),
-    ("right_eyebrow", list(range(17, 22))),
-    ("left_eyebrow", list(range(22, 27))),
-    ("nose", list(range(27, 36))),
-    ("right_eye", list(range(36, 42))),
-    ("left_eye", list(range(42, 48))),
-    ("mouth", list(range(48, 68)))
-])
+        print('Download complete!')
+        time.sleep(0.1)
 
 
 # for calculating the midpoint between two points
@@ -87,17 +61,15 @@ def eye_aspect_ratio(eye_point, facial_landmark):
     EAR = vertical_dist / horizontal_dist
     return EAR
 
+
 # used to play the alarm sound on loop
-
-
 def raise_alarm():
     alert_sound = AudioSegment.from_wav("audio/beep-06.wav")
     while ALARM_ON:
         play(alert_sound)
 
+
 # used to log messages
-
-
 def logger(message):
     if __debug__:
         print(message)
@@ -110,6 +82,29 @@ def main():
     COUNTER = 0
     global ALARM_ON
     # ALARM_ON = False
+
+    print('Preparing the detectors:')
+    download_detector()
+    print('Loading modules:')
+
+    start = datetime.datetime.now()
+    P = "shape_predictor_68_face_landmarks.dat"
+    print("Loading facial landmark predictor...")
+
+    detector = dlib.get_frontal_face_detector()
+    predictor = dlib.shape_predictor(P)
+    after_model_load = datetime.datetime.now()
+
+    # For dlib's 68-point facial detector:
+    FACIAL_LANDMARKS = OrderedDict([
+        ("jaw", list(range(0, 17))),
+        ("right_eyebrow", list(range(17, 22))),
+        ("left_eyebrow", list(range(22, 27))),
+        ("nose", list(range(27, 36))),
+        ("right_eye", list(range(36, 42))),
+        ("left_eye", list(range(42, 48))),
+        ("mouth", list(range(48, 68)))
+    ])
 
     # using 0 for external camera input
     cap = cv2.VideoCapture(0)
@@ -177,7 +172,7 @@ def main():
 
                     cv2.putText(frame, "Drowsiness Alert!", (10, 30),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                    print("Drowsiness detected!")
+                    # print("Drowsiness detected!")
             else:
                 COUNTER = 0
                 ALARM_ON = False
