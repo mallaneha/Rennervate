@@ -76,6 +76,72 @@ def eye_aspect_ratio(eye_point, facial_landmark):
     return EAR
 
 
+# for calculating mouth aspect ratio
+def mouth_aspect_ratio(mouth_point, landmark):
+    # calculating distance of the horizontal line
+    left_horizontal = [landmark.part(mouth_point[0]).x, landmark.part(mouth_point[0]).y]
+    right_horizontal = [
+        landmark.part(mouth_point[6]).x,
+        landmark.part(mouth_point[6]).y,
+    ]
+    horizontal_dist = euclidean_distance(
+        left_horizontal[0], left_horizontal[1], right_horizontal[0], right_horizontal[1]
+    )
+
+    # calculating distance of left vertical line
+    top_left_vertical = [
+        landmark.part(mouth_point[1]).x,
+        landmark.part(mouth_point[1]).y,
+    ]
+    bot_left_vertical = [
+        landmark.part(mouth_point[11]).x,
+        landmark.part(mouth_point[11]).y,
+    ]
+    left_vertcal_dist = euclidean_distance(
+        top_left_vertical[0],
+        top_left_vertical[1],
+        bot_left_vertical[0],
+        bot_left_vertical[1],
+    )
+
+    # calculating distance of mid vertical line
+    top_mid_vertical = [
+        landmark.part(mouth_point[3]).x,
+        landmark.part(mouth_point[3]).y,
+    ]
+    bot_mid_vertical = [
+        landmark.part(mouth_point[9]).x,
+        landmark.part(mouth_point[9]).y,
+    ]
+    mid_vertical_dist = euclidean_distance(
+        top_mid_vertical[0],
+        top_mid_vertical[1],
+        bot_mid_vertical[0],
+        bot_mid_vertical[1],
+    )
+
+    # calculating distance of right vertical line
+    top_right_vertical = [
+        landmark.part(mouth_point[5]).x,
+        landmark.part(mouth_point[5]).y,
+    ]
+    bot_right_vertical = [
+        landmark.part(mouth_point[7]).x,
+        landmark.part(mouth_point[7]).y,
+    ]
+    right_vertical_dist = euclidean_distance(
+        top_right_vertical[0],
+        top_right_vertical[1],
+        bot_right_vertical[0],
+        bot_right_vertical[1],
+    )
+
+    MAR = (left_vertcal_dist + mid_vertical_dist + right_vertical_dist) / (
+        3 * horizontal_dist
+    )
+    return MAR
+
+
 # used to play the alarm sound on loop
 def raise_alarm():
     alert_sound = AudioSegment.from_wav("audio/beep-06.wav")
