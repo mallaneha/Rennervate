@@ -90,12 +90,12 @@ def mouth_aspect_ratio(mouth_point, landmark):
 
     # calculating distance of left vertical line
     top_left_vertical = [
-        landmark.part(mouth_point[1]).x,
-        landmark.part(mouth_point[1]).y,
+        landmark.part(mouth_point[2]).x,
+        landmark.part(mouth_point[2]).y,
     ]
     bot_left_vertical = [
-        landmark.part(mouth_point[11]).x,
-        landmark.part(mouth_point[11]).y,
+        landmark.part(mouth_point[10]).x,
+        landmark.part(mouth_point[10]).y,
     ]
     left_vertcal_dist = euclidean_distance(
         top_left_vertical[0],
@@ -122,12 +122,12 @@ def mouth_aspect_ratio(mouth_point, landmark):
 
     # calculating distance of right vertical line
     top_right_vertical = [
-        landmark.part(mouth_point[5]).x,
-        landmark.part(mouth_point[5]).y,
+        landmark.part(mouth_point[4]).x,
+        landmark.part(mouth_point[4]).y,
     ]
     bot_right_vertical = [
-        landmark.part(mouth_point[7]).x,
-        landmark.part(mouth_point[7]).y,
+        landmark.part(mouth_point[8]).x,
+        landmark.part(mouth_point[8]).y,
     ]
     right_vertical_dist = euclidean_distance(
         top_right_vertical[0],
