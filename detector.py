@@ -241,6 +241,8 @@ def main():
                 y = landmarks.part(n).y
                 cv2.circle(frame, (x, y), 3, (0, 0, 255), -1)
 
+            calculated_mar = mouth_aspect_ratio(FACIAL_LANDMARKS["mouth"], landmarks)
+
             left_EAR = eye_aspect_ratio(FACIAL_LANDMARKS["left_eye"], landmarks)
             right_EAR = eye_aspect_ratio(FACIAL_LANDMARKS["right_eye"], landmarks)
 
@@ -270,6 +272,16 @@ def main():
             else:
                 COUNTER = 0
                 ALARM_ON = False
+
+            cv2.putText(
+                frame,
+                "MAR: {:.2f}".format(calculated_mar),
+                (300, 400),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 0, 255),
+                2,
+            )
 
             cv2.putText(
                 frame,
