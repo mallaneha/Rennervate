@@ -15,8 +15,8 @@ import dlib
 start_time = time.time()
 
 
-# downloading the required dlib 68 landmarks predictor
 def download_detector():
+    "downloading the required dlib 68 landmarks predictor"
     url = "https://github.com/JeffTrain/selfie/raw/master/shape_predictor_68_face_landmarks.dat"
     local_filename = url.split("/")[-1]
 
@@ -37,18 +37,18 @@ def download_detector():
         time.sleep(0.1)
 
 
-# for calculating the midpoint between two points
 def midpoint(p1, p2):
+    "for calculating the midpoint between two points"
     return int((p1.x + p2.x) / 2), int((p1.y + p2.y) / 2)
 
 
-# for calculating the distance between two points
 def euclidean_distance(leftx, lefty, rightx, righty):
+    "for calculating the distance between two points"
     return np.sqrt((leftx - rightx) ** 2 + (lefty - righty) ** 2)
 
 
-# for calculating the eye aspect ratio
 def eye_aspect_ratio(eye_point, facial_landmark):
+    "for calculating the eye aspect ratio"
     left_point = [
         facial_landmark.part(eye_point[0]).x,
         facial_landmark.part(eye_point[0]).y,
@@ -76,8 +76,8 @@ def eye_aspect_ratio(eye_point, facial_landmark):
     return EAR
 
 
-# for calculating mouth aspect ratio
 def mouth_aspect_ratio(mouth_point, landmark):
+    "for calculating mouth aspect ratio"
     # calculating distance of the horizontal line
     left_horizontal = [landmark.part(mouth_point[0]).x, landmark.part(mouth_point[0]).y]
     right_horizontal = [
@@ -142,15 +142,15 @@ def mouth_aspect_ratio(mouth_point, landmark):
     return MAR
 
 
-# used to play the alarm sound on loop
 def raise_alarm():
+    "used to play the alarm sound on loop"
     alert_sound = AudioSegment.from_wav("audio/beep-06.wav")
     while ALARM_ON:
         play(alert_sound)
 
 
-# used to log messages
 def logger(message):
+    "used to log messages"
     if __debug__:
         print(message)
 
