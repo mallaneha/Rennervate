@@ -11,6 +11,7 @@ from tqdm import tqdm
 import numpy as np
 import cv2
 import dlib
+import csv
 
 start_time = time.time()
 
@@ -155,11 +156,19 @@ def logger(message):
         print(message)
 
 
+def save_ear(ear_list):
+    with open("train.csv", mode="w") as train_file:
+        file_write = csv.writer(train_file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+        row = ear_list
+        file_write.writerow(row)
+
+
 def main():
     EAR_THRESH = 0.25
     EAR_CONSECUTIVE_FRAMES = 42
 
     COUNTER = 0
+    count = 0
     global ALARM_ON
     # ALARM_ON = False
 
@@ -189,7 +198,8 @@ def main():
     )
 
     # using 0 for external camera input
-    cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture("videos/1-MaleGlasses.avi")
 
     if cap.isOpened():
         CHECK, frame = cap.read()
@@ -197,8 +207,10 @@ def main():
         CHECK = False
 
     time_stamp = True
+
+    ear_list = []
     while CHECK:
-        CHECK, frame = cap.read()
+        _, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         before_face = datetime.datetime.now()
@@ -247,6 +259,11 @@ def main():
             right_EAR = eye_aspect_ratio(FACIAL_LANDMARKS["right_eye"], landmarks)
 
             ear_both_eyes = (left_EAR + right_EAR) / 2
+
+            count += 1
+            if count == 120:
+                ear_list.append(round(ear_both_eyes, 2))
+                count = 0
 
             if ear_both_eyes < EAR_THRESH:
                 COUNTER += 1
@@ -310,6 +327,9 @@ def main():
         if key == ord("q"):
             print("Ending the capture")
             break
+
+    print(ear_list)
+    save_ear(ear_list)
 
     cv2.destroyAllWindows()
     cap.release()
