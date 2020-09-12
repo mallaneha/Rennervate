@@ -4,6 +4,7 @@ from typing import OrderedDict
 import time
 import datetime
 import threading
+import csv
 from pydub import AudioSegment
 from pydub.playback import play
 import requests
@@ -11,7 +12,6 @@ from tqdm import tqdm
 import numpy as np
 import cv2
 import dlib
-import csv
 
 start_time = time.time()
 
@@ -156,11 +156,12 @@ def logger(message):
         print(message)
 
 
-def save_ear(ear_list):
+def save_ear(ear_list, mar_list):
     with open("train.csv", mode="w") as train_file:
         file_write = csv.writer(train_file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
         row = ear_list
-        file_write.writerow(row)
+        file_write.writerow(ear_list)
+        file_write.writerow(mar_list)
 
 
 def main():
@@ -209,107 +210,122 @@ def main():
     time_stamp = True
 
     ear_list = []
+    mar_list = []
+
+    ear_start_time = time.time()
     while CHECK:
         _, frame = cap.read()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        before_face = datetime.datetime.now()
-        faces = detector(gray)
-        after_face = datetime.datetime.now()
+        if _:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        for (i, face) in enumerate(faces):
-            x1 = face.left()
-            x2 = face.right()
-            y1 = face.top()
-            y2 = face.bottom()
+            before_face = datetime.datetime.now()
+            faces = detector(gray)
+            after_face = datetime.datetime.now()
 
-            # draw the face bounding box
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            for (i, face) in enumerate(faces):
+                x1 = face.left()
+                x2 = face.right()
+                y1 = face.top()
+                y2 = face.bottom()
 
-            # show the face number
-            cv2.putText(
-                frame,
-                "Face #{}".format(i + 1),
-                (x1 - 10, y1 - 10),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 255, 0),
-                2,
-            )
+                # draw the face bounding box
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-            before_landmarks = datetime.datetime.now()
-            landmarks = predictor(gray, face)
-            after_landmarks = datetime.datetime.now()
+                # show the face number
+                cv2.putText(
+                    frame,
+                    "Face #{}".format(i + 1),
+                    (x1 - 10, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (0, 255, 0),
+                    2,
+                )
 
-            # calculating the facial landmamrks
-            landmark_keys = ["right_eye", "left_eye", "mouth"]
-            required_landmarks = []
-            for key in landmark_keys:
-                required_landmarks.extend(FACIAL_LANDMARKS.get(key))
+                before_landmarks = time.time()
+                landmarks = predictor(gray, face)
+                after_landmarks = time.time()
 
-            # drawing the facial landmarks in the video
-            for n in required_landmarks:
-                x = landmarks.part(n).x
-                y = landmarks.part(n).y
-                cv2.circle(frame, (x, y), 3, (0, 0, 255), -1)
+                # calculating the facial landmamrks
+                landmark_keys = ["right_eye", "left_eye", "mouth"]
+                required_landmarks = []
+                for key in landmark_keys:
+                    required_landmarks.extend(FACIAL_LANDMARKS.get(key))
 
-            calculated_mar = mouth_aspect_ratio(FACIAL_LANDMARKS["mouth"], landmarks)
+                # drawing the facial landmarks in the video
+                for n in required_landmarks:
+                    x = landmarks.part(n).x
+                    y = landmarks.part(n).y
+                    cv2.circle(frame, (x, y), 3, (0, 0, 255), -1)
 
-            left_EAR = eye_aspect_ratio(FACIAL_LANDMARKS["left_eye"], landmarks)
-            right_EAR = eye_aspect_ratio(FACIAL_LANDMARKS["right_eye"], landmarks)
+                calculated_mar = mouth_aspect_ratio(
+                    FACIAL_LANDMARKS["mouth"], landmarks
+                )
 
-            ear_both_eyes = (left_EAR + right_EAR) / 2
+                left_EAR = eye_aspect_ratio(FACIAL_LANDMARKS["left_eye"], landmarks)
+                right_EAR = eye_aspect_ratio(FACIAL_LANDMARKS["right_eye"], landmarks)
 
-            count += 1
-            if count == 120:
-                ear_list.append(round(ear_both_eyes, 2))
-                count = 0
+                ear_both_eyes = (left_EAR + right_EAR) / 2
 
-            if ear_both_eyes < EAR_THRESH:
-                COUNTER += 1
+                # count += 1
 
-                if COUNTER >= EAR_CONSECUTIVE_FRAMES:
-                    if not ALARM_ON:
-                        ALARM_ON = True
+                if (time.time() - ear_start_time) >= 4:
+                    ear_list.append(round(ear_both_eyes, 2))
+                    mar_list.append(round(calculated_mar, 2))
+                    # print("4 sec")
+                    ear_start_time = time.time()
 
-                        # creating new thread to play the alarm in background
-                        audio_thread = threading.Thread(target=raise_alarm)
-                        audio_thread.start()
+                    # ear_time = time.time()
+                    # count = 0
 
-                    cv2.putText(
-                        frame,
-                        "Drowsiness Alert!",
-                        (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.5,
-                        (0, 255, 0),
-                        2,
-                    )
-                    # print("Drowsiness detected!")
-            else:
-                COUNTER = 0
-                ALARM_ON = False
+                if ear_both_eyes < EAR_THRESH:
+                    COUNTER += 1
 
-            cv2.putText(
-                frame,
-                "MAR: {:.2f}".format(calculated_mar),
-                (300, 400),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 0, 255),
-                2,
-            )
+                    if COUNTER >= EAR_CONSECUTIVE_FRAMES:
+                        if not ALARM_ON:
+                            ALARM_ON = True
 
-            cv2.putText(
-                frame,
-                "EAR: {:.2f}".format(ear_both_eyes),
-                (300, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 0, 255),
-                2,
-            )
+                            # creating new thread to play the alarm in background
+                            audio_thread = threading.Thread(target=raise_alarm)
+                            audio_thread.start()
 
+                        cv2.putText(
+                            frame,
+                            "Drowsiness Alert!",
+                            (10, 30),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            (0, 255, 0),
+                            2,
+                        )
+                        # print("Drowsiness detected!")
+                else:
+                    COUNTER = 0
+                    ALARM_ON = False
+
+                cv2.putText(
+                    frame,
+                    "MAR: {:.2f}".format(calculated_mar),
+                    (300, 400),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (0, 0, 255),
+                    2,
+                )
+
+                cv2.putText(
+                    frame,
+                    "EAR: {:.2f}".format(ear_both_eyes),
+                    (300, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (0, 0, 255),
+                    2,
+                )
+        else:
+            print("End of video")
+            break
         cv2.namedWindow("Capturing")
         cv2.imshow("Capturing", frame)
 
@@ -328,8 +344,8 @@ def main():
             print("Ending the capture")
             break
 
-    print(ear_list)
-    save_ear(ear_list)
+    # print(ear_list)
+    save_ear(ear_list, mar_list)
 
     cv2.destroyAllWindows()
     cap.release()
