@@ -4,12 +4,12 @@ from typing import OrderedDict
 import time
 import datetime
 import threading
-import csv
 from pydub import AudioSegment
 from pydub.playback import play
 import cv2
 import dlib
 from formulae import eye_aspect_ratio, mouth_aspect_ratio
+from dataProcessor import save_ear
 from dlib68 import download_detector
 
 start_time = time.time()
@@ -26,24 +26,6 @@ def logger(message):
     "used to log messages"
     if __debug__:
         print(message)
-
-
-def save_ear(ear_list, mar_list, filename):
-    # if not os.path.exists(f"{filename}.csv"):
-    #     with open(f"{filename}.csv", mode="w") as train_file:
-    #         file_write = csv.writer(
-    #             train_file, delimiter=",", quoting=csv.QUOTE_MINIMAL
-    #         )
-    #         file_write.writerow(ear_list)
-    #         file_write.writerow(mar_list)
-    # else:
-    with open(f"{filename}_ear.csv", mode="a") as file:
-        file_write = csv.writer(file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
-        file_write.writerow(ear_list)
-
-    with open(f"{filename}_mar.csv", mode="a") as file:
-        file_write = csv.writer(file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
-        file_write.writerow(mar_list)
 
 
 def main():
