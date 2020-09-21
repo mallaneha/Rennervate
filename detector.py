@@ -148,7 +148,7 @@ def main():
 
                             # count += 1
 
-                            if (time.time() - ear_start_time) >= 4:
+                            if (time.time() - ear_start_time) >= 1:
                                 ear_list.append(round(ear_both_eyes, 2))
                                 mar_list.append(round(calculated_mar, 2))
                                 # print("4 sec")

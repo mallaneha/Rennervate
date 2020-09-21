@@ -1,5 +1,5 @@
 import csv
-from statistics import median
+# from statistics import median
 
 
 def save_ear(ear_list, mar_list, filename):
@@ -11,7 +11,7 @@ def save_ear(ear_list, mar_list, filename):
     #         file_write.writerow(ear_list)
     #         file_write.writerow(mar_list)
     # else:
-    with open(f"{filename}_mear.csv", mode="a") as file:
+    with open(f"{filename}_mear_P3.csv", mode="a") as file: #change P3 in the file name with PA1, PA2 and so on for different person's video
         file_write = csv.writer(file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
         file_write.writerow(ear_list)
         file_write.writerow(mar_list)
@@ -22,7 +22,9 @@ def save_ear(ear_list, mar_list, filename):
 
 
 def processingCSV(filename):
-    medMEar = []
+    cleanedMAR = []
+    cleanedEAR = []
+
     if filename == "Drowsy":
         status = 1
     else:
@@ -40,22 +42,44 @@ def processingCSV(filename):
                 for item in row:
                     mearList.append(float(item))
                 # print(mearList)
-                medMEar.append(round(median(mearList), 2))
-                # print(median(mearList))
-                mearList.clear()
+
+                # if count % 2 == 0:
+                #     medMEar.append(status)
+                #     # print(medMEar)
+                #     finalCSV(filename, medMEar)
+                #     medMEar.clear()
+
+                # taking min/max value from 5 data
+                for x in range(0, len(mearList) + 1, 5):
+                    if len(mearList) - x >= 5:
+                        minimum = round(min(mearList[x], mearList[x + 1], mearList[x + 2], mearList[x + 3], mearList[x + 4]), 2)
+                        maximum = round(max(mearList[x], mearList[x + 1], mearList[x + 2], mearList[x + 3], mearList[x + 4]), 2)
+
+                        if (status == 1 and count % 2 == 0):
+                            cleanedEAR.append(minimum)
+                        elif (status == 0 and count % 2 == 1):
+                            cleanedMAR.append(minimum)
+                        elif (status == 1 and count % 2 == 1):
+                            cleanedMAR.append(maximum)
+                        elif (status == 0 and count % 2 == 0):
+                            cleanedEAR.append(maximum)
+
                 count += 1
+                mearList.clear()
 
                 if count % 2 == 0:
-                    medMEar.append(status)
-                    # print(medMEar)
-                    finalCSV(filename, medMEar)
-                    medMEar.clear()
+                    print(cleanedEAR)
+                    print(cleanedMAR)
+                    cleanCSV(filename, cleanedEAR, cleanedMAR)
+                    cleanedEAR.clear()
+                    cleanedMAR.clear()
 
 
-def finalCSV(filename, medMEar):
-    with open(f"{filename}_final_mear.csv", mode="a") as file:
+def cleanCSV(filename, cleanedEAR, cleanedMAR):
+    with open(f"{filename}_mear_cleaned.csv", mode="a") as file:
         file_write = csv.writer(file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
-        file_write.writerow(medMEar)
+        file_write.writerow(cleanedEAR)
+        file_write.writerow(cleanedMAR)
 
 
 def main():
