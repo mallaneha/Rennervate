@@ -1,8 +1,9 @@
 import csv
+
 # from statistics import median
 
 
-def save_ear(ear_list, mar_list, filename):
+def save_ear(ear_list, mar_list, filename, person):
     # if not os.path.exists(f"{filename}.csv"):
     #     with open(f"{filename}.csv", mode="w") as train_file:
     #         file_write = csv.writer(
@@ -11,7 +12,9 @@ def save_ear(ear_list, mar_list, filename):
     #         file_write.writerow(ear_list)
     #         file_write.writerow(mar_list)
     # else:
-    with open(f"{filename}_mear_P3.csv", mode="a") as file: #change P3 in the file name with PA1, PA2 and so on for different person's video
+    with open(
+        f"{filename}_mear_PA{person}.csv", mode="a"
+    ) as file:  # change P3 in the file name with PA1, PA2 and so on for different person's video
         file_write = csv.writer(file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
         file_write.writerow(ear_list)
         file_write.writerow(mar_list)
@@ -31,7 +34,7 @@ def processingCSV(filename):
         status = 0
 
     with open(f"{filename}_mear.csv", mode="r") as file:
-        csv_read = csv.reader(file, delimiter=',')
+        csv_read = csv.reader(file, delimiter=",")
         count = 0
 
         for row in csv_read:
@@ -52,16 +55,34 @@ def processingCSV(filename):
                 # taking min/max value from 5 data
                 for x in range(0, len(mearList) + 1, 5):
                     if len(mearList) - x >= 5:
-                        minimum = round(min(mearList[x], mearList[x + 1], mearList[x + 2], mearList[x + 3], mearList[x + 4]), 2)
-                        maximum = round(max(mearList[x], mearList[x + 1], mearList[x + 2], mearList[x + 3], mearList[x + 4]), 2)
+                        minimum = round(
+                            min(
+                                mearList[x],
+                                mearList[x + 1],
+                                mearList[x + 2],
+                                mearList[x + 3],
+                                mearList[x + 4],
+                            ),
+                            2,
+                        )
+                        maximum = round(
+                            max(
+                                mearList[x],
+                                mearList[x + 1],
+                                mearList[x + 2],
+                                mearList[x + 3],
+                                mearList[x + 4],
+                            ),
+                            2,
+                        )
 
-                        if (status == 1 and count % 2 == 0):
+                        if status == 1 and count % 2 == 0:
                             cleanedEAR.append(minimum)
-                        elif (status == 0 and count % 2 == 1):
+                        elif status == 0 and count % 2 == 1:
                             cleanedMAR.append(minimum)
-                        elif (status == 1 and count % 2 == 1):
+                        elif status == 1 and count % 2 == 1:
                             cleanedMAR.append(maximum)
-                        elif (status == 0 and count % 2 == 0):
+                        elif status == 0 and count % 2 == 0:
                             cleanedEAR.append(maximum)
 
                 count += 1
