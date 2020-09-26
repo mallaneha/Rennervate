@@ -13,6 +13,6 @@ shape_predictor_68_face_landmarks.dat
 
 shape_predictor_68_face_landmarks.dat.bz2
 
-*.csv
+
 
 __pycache__
